@@ -1,35 +1,37 @@
-name: Build and Release uYouEnhanced IPA
+name: Build and Release uYouEnhanced
 
 on:
   workflow_dispatch:
     inputs:
-      yt_version:
-        description: 'YouTube Version (Leave blank for default)'
-        required: false
-        default: '19.08.2'
+      ipa_url:
+        description: "Direct URL to the decrypted YouTube IPA file"
+        required: true
+        default: ""
         type: string
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Setup Theos
         run: |
-          echo "GH_EXECUTIVE_SERVER=1" >> $GITHUB_ENV
           git clone --recursive https://github.com/theos/theos.git ~/theos
           echo "THEOS=~/theos" >> $GITHUB_ENV
 
-      - name: Run Build Script
+      - name: Download YouTube IPA
         run: |
-          # Build the tweak and package the IPA
+          curl -L -o main/YouTube.ipa "${{ github.event.inputs.ipa_url }}"
+
+      - name: Build Package
+        run: |
           make clean package FINALPACKAGE=1
 
-      - name: Upload IPA Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: uYouEnhanced-IPA
